@@ -4,11 +4,9 @@ Created on Fri Feb 14 16:07:07 2014
 
 @author: f1ndm3h
 
-TO DO SHIT:
+TO DO STUFF:
 
 - Add game support ?
-
-- ADD  !tiproulette 
 
 - Ghost itself when running the bot!
 
@@ -78,7 +76,9 @@ poollist = ["- https://zeit.yourmine.org/",
             "- http://zeit.mha.sh/",
             "- http://zeit.hashfaster.com",
             "- https://zeit.hash.so/",
-            "- https://zeit.imine.at",]
+            "- https://zeit.imine.at",
+            "- http://zeit.cloudapp.net",]
+             
             
 faucetlist = ["- http://earncryptocoins.com/zeitcoin",
               ]
@@ -95,6 +95,28 @@ nodelist = ["54.213.62.154",
 """
     NA VALO FLOOD PROTECTION.. px an ekanes !pools min ksana kanei meta apo 10 sec! 
 """
+
+"""
+    Tries to find the average value of a coin
+    If failed -> returns -1
+"""
+def getAveragePrice(prices=currPrices):
+    
+    _sum, _len = 0, 0
+    
+    print prices
+    
+    for pr in prices.values():
+        if pr != -1:
+           _sum = _sum + float(pr)
+           _len = _len + 1
+
+    try:
+        print "mpika edo"
+        print float(_sum / _len)
+        return float(_sum / _len)
+    except:
+        return -1
 
 """
     The answer is in the form ACC :
@@ -131,6 +153,50 @@ def checkIfIdented(s, who):
                         return False
     except:
         print "Something went wrong when fetching users list @ " + BOTCHANNEL
+
+
+"""
+    Fetches current BTC price from 2 sources
+    and returns its average value!
+"""
+def findAverageBTCprice():
+    
+    prices, newprices = [], []
+    # try to get the price from coinbase
+    try:
+        
+        url = "https://coinbase.com/api/v1/prices/sell"
+        json_data = json.load(urllib2.urlopen(url))        
+        prices.append(json_data['subtotal']['amount'])     
+    except:
+        pass
+    
+    # try to get the price from coindesk
+    try:
+        
+        url = "http://api.coindesk.com/v1/bpi/currentprice.json"
+        json_data = json.load(urllib2.urlopen(url))        
+        prices.append(json_data['bpi']['USD']['rate'])
+        
+        try:
+            prices.append(json_data['exchanges']['BTC-e'])
+        except:
+            pass
+        
+        try:
+            prices.append(json_data['exchanges']['Bitstamp'])
+        except:
+            pass
+    except:
+        pass
+
+    for pr in prices:
+        try:
+            newprices.append(float(pr.replace("$", "")))
+        except:
+            continue
+    # return the average current BTC value
+    return sum(newprices) / float(len(newprices))
 
 def priceUpdater():
     
@@ -253,8 +319,8 @@ def displayCoinInfo():
         return out, data['difficulty'], nrate[:5]
 
     except:
-        out = "Something went wrong. Please try again later and report to cnap"
-        return out
+        out = "Something went wrong. Please try again later and report it to cnap"
+        return out, None, None
         
     
 def displaySpecs(s, where, who): 
@@ -432,7 +498,7 @@ def botCommands(s, cmd, xmldoc, who, where, args):
         msg = "PoS [Proof of Stake] starts after you have held an amount of coins for 20+ days.\
  For 1st year your coins will be increased by 25% (it will be shown as an incoming transaction) \
  every time that a specific amount of coins is held in your wallet for 20+ days.\
- After that every years stake gets decreased by 5% but still ZeitCoins POS is the highest interest at the moment."
+ After that every one year stake gets decreased by 5% but still ZeitCoins POS is the highest interest at the moment."
          
         s.send("PRIVMSG " + where + " :" + msg + "\r\n")
         
@@ -449,18 +515,30 @@ def botCommands(s, cmd, xmldoc, who, where, args):
         
         if not args:
             s.send("PRIVMSG " + where + " :" + who + ": You didn't tell me your mining speed :( [Usage: !khash 100]\r\n")
-            
+
         if cmd == "!khash":    
             ukhash = int(args[0]) * 1000
         else:
             ukhash = int(args[0])
         # block_reward / diff 
         out, diff, nrate = displayCoinInfo()
+
+        lowlim = block_reward[0] / ((diff*(pow(2, 32) / ukhash) / 3600 / 24))
+        upperlim = block_reward[1] / ((diff*(pow(2, 32) / ukhash) / 3600 / 24))
         
-        lowlim = str(block_reward[0] / ((diff*(pow(2, 32) / ukhash) / 3600 / 24)))
-        upperlim = str(block_reward[1] / ((diff*(pow(2, 32) / ukhash) / 3600 / 24)))
+        avg = getAveragePrice(currPrices)
         
-        s.send("PRIVMSG " + where + " :" + who + ": You will mine approximately from " + lowlim + " to " + upperlim + " ZEITs per day!\r\n")
+        if avg != -1:
+            # print lowlim, avg, findAverageBTCprice()
+            lowprice = (lowlim * avg) * findAverageBTCprice()
+            print lowprice
+
+            highprice = (upperlim * avg) * findAverageBTCprice()
+            print highprice
+
+        
+        s.send("PRIVMSG " + where + " :" + who + ": You will mine approximately from %.2f to %.2f ZEITs per day.\r\n" % (lowlim, upperlim))
+        s.send("PRIVMSG " + where + " :" + who + ": Or make approximately from %.2f to %.2f USD per day.\r\n" % (lowprice, highprice))
     #elif cmd == "!slaproulette":
         
     #    userlist = fetchUserList(s)
