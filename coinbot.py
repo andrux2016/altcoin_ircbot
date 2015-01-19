@@ -2,13 +2,11 @@
 """
 Created on Fri Feb 14 16:07:07 2014
 
-@author: f1ndm3h
+@author: f1ndm3h/em0vskangoura
 
-TO DO STUFF:
-
-- Add game support ?
-
-- Ghost itself when running the bot!
+Note: This py script will work for any coin and irc server, channel
+as long as its modified properly. Some changes in the currency exchange sites may need to happen
+since they may be outdated by now!
 
 """
 
@@ -34,12 +32,12 @@ MILLION=1000000
 
 HOST="irc.freenode.net"
 PORT=6667
-NICK="ZeitAssistBot"
-IDENT="ZeitAssistBot"
-REALNAME="ZeitAssistBot"
+NICK=""
+IDENT=""
+REALNAME=""
 readbuffer=""
-BOTCHANNEL="#zeitcoin"
-PASS="cnapbot@123"
+BOTCHANNEL="#"
+PASS=""
 
 # keep updating this dictionary of prices
 currPrices = {'coinex' : -1, 'cryptorush' : -1, 'cryptsy' : -1}
@@ -48,8 +46,11 @@ block_reward = [250000, 1000000]
 
 DONATEADDR="MZZCShGh3iBA1o29nxfufiQHhG3wjexGhG"
 
-giftlist = [ "gives 2 symmetric boobs to ",
-             "gives a hug to ",
+#
+# Pool and gift examples for an old altcoin called Zeitcoin
+#
+
+giftlist = [ "gives a hug to ",
              "gives a lucky ZeitCoin to ",
              "gives 0.00000000 BTC to ",
              "throws some crypto poops to ",
@@ -92,9 +93,6 @@ nodelist = ["54.213.62.154",
 "192.3.178.234",
 "162.220.26.146",]
 
-"""
-    NA VALO FLOOD PROTECTION.. px an ekanes !pools min ksana kanei meta apo 10 sec! 
-"""
 
 """
     Tries to find the average value of a coin
@@ -138,7 +136,6 @@ def checkIfIdented(s, who):
         tmp = string.split(readbuffer, "\n")
         
         lockbuffer.release()        
-        
         
         for line in tmp:
             line = string.rstrip(line)
@@ -204,8 +201,6 @@ def priceUpdater():
     currPrices['cryptorush'] = fetchPrice('cryptorush')
     # update prices in 2 mins again
     Timer(120, priceUpdater, ()).start()
-        
-    # print "mpika stin price updater!"
     # print currPrices
 
 def randomTIP(where, s):
@@ -398,12 +393,6 @@ def displayPrice(coin, mid, market='cryptsy'):
             price = newdata[88]['last_price']
             # print "Price is: " + str(price)
             return "%.8f" % (price * ( 10 ** -8 ))
-            
-            # print data2['last_price']
-
-            # print data
-                    
-            # return info
         except:
             return -1
 
